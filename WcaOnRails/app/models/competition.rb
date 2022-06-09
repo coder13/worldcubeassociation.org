@@ -1363,6 +1363,12 @@ class Competition < ApplicationRecord
     )
   end
 
+  def is_full?
+    if self.competitor_limit_enabled?
+      self.registrations.accepted.length >= self.competitor_limit
+    end
+  end
+
   # For associated_events_picker
   def events_to_associated_events(events)
     events.map do |event|

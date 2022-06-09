@@ -155,9 +155,17 @@
       <a href="#" id="email-selected" target="_blank" class="btn btn-info selected-registrations-actions">
         <%= ui_icon 'envelope' %> <%= t('registrations.list.email') %>
       </a>
-      <button type="submit" class="btn btn-success selected-pending-deleted-registrations-actions" name="registrations_action" value="accept-selected">
-        <%= ui_icon 'check' %> <%= t('registrations.list.approve') %>
-      </button>
+ 
+      <% if @competition.is_full? %>
+        <button type="submit" class="btn btn-success selected-pending-deleted-registrations-actions" name="registrations_action" value="accept-selected" disabled >
+          <%= ui_icon 'check' %> <%= t('registrations.list.approve') %>
+        </button>
+      <% else %>
+        <button type="submit" class="btn btn-success selected-pending-deleted-registrations-actions" name="registrations_action" value="accept-selected" >
+          <%= ui_icon 'check' %> <%= t('registrations.list.approve') %>
+        </button>
+      <% end %>
+
       <button type="submit" class="btn btn-warning selected-approved-deleted-registrations-actions" name="registrations_action" value="reject-selected">
         <%= ui_icon 'times' %> <%= t('registrations.list.reject') %>
       </button>
