@@ -54,14 +54,6 @@ class SessionsController < Devise::SessionsController
     session.delete(:otp_user_id)
   end
 
-  def generate_email_otp
-    return render json: { error: { message: I18n.t("devise.sessions.new.2fa.errors.cant_send_email") } } unless session[:otp_user_id] || current_user
-
-    user = User.find(session[:otp_user_id] || current_user.id)
-    TwoFactorMailer.send_otp_to_user(user).deliver_now
-    render json: { status: "ok" }
-  end
-
   def create
     # Overrides Devise's create sign in method and pass it a block executed
     # after sign in, to mark use as recently authenticated upon sign in.

@@ -31,7 +31,6 @@ Rails.application.routes.draw do
              as: :user_registration do
                get :cancel
              end
-    post 'users/generate-email-otp' => 'sessions#generate_email_otp'
     post 'users/authenticate-sensitive' => 'users#authenticate_user_for_sensitive_edit'
     delete 'users/sign-out-other' => 'sessions#destroy_other', as: :destroy_other_user_sessions
   end
