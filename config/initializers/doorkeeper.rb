@@ -9,6 +9,13 @@ Doorkeeper.configure do
   default_scopes  :public
   optional_scopes :dob, :email, :manage_competitions, :openid, :profile, :cms
 
+  # The cms scope requires an interactive authorization request. The custom
+  # authorization controller also limits it to trusted clients and CMS users.
+  scopes_by_grant_type(
+    password: %w[public dob email manage_competitions openid profile],
+    client_credentials: %w[public dob email manage_competitions openid profile],
+  )
+
   base_controller 'ApplicationController'
   base_metal_controller 'ApplicationController'
 

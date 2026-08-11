@@ -1,4 +1,11 @@
 import type { CollectionConfig } from "payload";
+import {
+  canUpdateOwnCmsUser,
+  hasCmsRole,
+  userRoles,
+} from "@/lib/payload/access";
+
+const denyClientWrite = () => false;
 
 export const Users: CollectionConfig = {
   slug: "users",
@@ -6,6 +13,39 @@ export const Users: CollectionConfig = {
     useAsTitle: "name",
   },
   fields: [
+    {
+      name: "email",
+      type: "email",
+      admin: {
+        readOnly: true,
+      },
+      access: {
+        create: denyClientWrite,
+        update: denyClientWrite,
+      },
+    },
+    {
+      name: "name",
+      type: "text",
+      admin: {
+        readOnly: true,
+      },
+      access: {
+        create: denyClientWrite,
+        update: denyClientWrite,
+      },
+    },
+    {
+      name: "image",
+      type: "text",
+      admin: {
+        readOnly: true,
+      },
+      access: {
+        create: denyClientWrite,
+        update: denyClientWrite,
+      },
+    },
     {
       name: "roles",
       type: "json",
@@ -22,22 +62,31 @@ export const Users: CollectionConfig = {
       admin: {
         hidden: true,
       },
+      access: {
+        create: denyClientWrite,
+        update: denyClientWrite,
+      },
     },
   ],
   access: {
-    admin: ({ req: { user } }) => {
-      return ["wst", "wct", "wat", "wmt", "board"].some((team) =>
-        user?.roles?.includes(team),
-      );
-    },
+    admin: ({ req: { user } }) => hasCmsRole(user),
+    create: denyClientWrite,
+    update: canUpdateOwnCmsUser,
+    delete: denyClientWrite,
+    readVersions: denyClientWrite,
+    unlock: denyClientWrite,
     read: ({ req: { user } }) => {
       if (!user) {
         return false;
       }
 
-      if (user.roles?.includes("wst_admin")) {
+      if (userRoles(user).includes("wst_admin")) {
         // Admins are allowed to see all users
         return true;
+      }
+
+      if (!hasCmsRole(user)) {
+        return false;
       }
 
       return {

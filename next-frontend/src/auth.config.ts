@@ -8,6 +8,7 @@ import {
   WCA_OIDC_CLIENT_SECRET,
   WCA_OIDC_ISSUER,
 } from "@/lib/wca/oauth/config";
+import { hasCmsRole, userRoles } from "@/lib/payload/access";
 
 export const WCA_PROVIDER_ID = "WCA";
 export const WCA_CMS_PROVIDER_ID = `${WCA_PROVIDER_ID}-CMS`;
@@ -102,6 +103,12 @@ export const authConfig: NextAuthConfig = {
 export const payloadAuthConfig: EnrichedAuthConfig = {
   ...authConfig,
   providers: [cmsWcaProvider],
+  callbacks: {
+    ...authConfig.callbacks,
+    async signIn({ profile }) {
+      return hasCmsRole(profile);
+    },
+  },
   basePath: "/api/auth/payload",
   cookies: {
     sessionToken: {
@@ -115,7 +122,7 @@ export const payloadAuthConfig: EnrichedAuthConfig = {
     },
   },
   events: {
-    signIn: async ({ user, payload }) => {
+    signIn: async ({ user, profile, payload }) => {
       if (!user.id || !payload) {
         return;
       }
@@ -124,7 +131,7 @@ export const payloadAuthConfig: EnrichedAuthConfig = {
         collection: "users",
         id: user.id,
         data: {
-          roles: user.roles,
+          roles: userRoles(profile),
           image: user.image,
         },
       });

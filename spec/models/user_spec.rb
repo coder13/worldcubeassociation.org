@@ -795,6 +795,24 @@ RSpec.describe User do
     end
   end
 
+  describe "can_use_cms? method" do
+    it "returns false for a user without a CMS role" do
+      expect(create(:user).can_use_cms?).to be false
+    end
+
+    it "returns true for each CMS role" do
+      cms_users = [
+        create(:user, :board_member),
+        create(:user, :wct_member),
+        create(:user, :wat_member),
+        create(:user, :wmt_member),
+        create(:user, :wst_member),
+      ]
+
+      expect(cms_users.map(&:can_use_cms?)).to all(be(true))
+    end
+  end
+
   describe "staff? method" do
     it "returns false for non-staff user" do
       user = create(:user)

@@ -434,6 +434,14 @@ class User < ApplicationRecord
     group_member?(UserGroup.teams_committees_group_wmt)
   end
 
+  def can_use_cms?
+    board_member? ||
+      communication_team? ||
+      marketing_team? ||
+      software_team? ||
+      group_member?(UserGroup.teams_committees_group_wat)
+  end
+
   def quality_assurance_committee?
     group_member?(UserGroup.teams_committees_group_wqac)
   end

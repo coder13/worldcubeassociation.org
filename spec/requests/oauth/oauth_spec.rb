@@ -34,6 +34,15 @@ RSpec.describe "oauth api" do
     verify_access_token access_token
   end
 
+  it 'rejects the cms scope for the password grant' do
+    oauth_app = create(:oauth_application, scopes: "openid cms")
+
+    post oauth_token_path, params: { grant_type: "password", client_id: oauth_app.uid, client_secret: oauth_app.secret, username: user.email, password: user.password, scope: "openid cms" }
+
+    expect(response).to have_http_status(:bad_request)
+    expect(response.parsed_body['error']).to eq('invalid_scope')
+  end
+
   context "grant_type authorization" do
     let(:oauth_app) { create(:oauth_application, redirect_uri: oauth_authorization_url) }
 
@@ -161,6 +170,56 @@ RSpec.describe "oauth api" do
         expect(access_token).not_to be_nil
         verify_access_token access_token
       end
+    end
+  end
+
+  context "with the cms scope" do
+    let(:oauth_app) do
+      create(
+        :oauth_application,
+        redirect_uri: oauth_authorization_url,
+        scopes: "openid profile email cms",
+        superapp: true,
+      )
+    end
+
+    it "rejects a user without a CMS role" do
+      visit_cms_authorization
+
+      expect(page.status_code).to eq(403)
+      expect(page).to have_text("invalid_scope")
+    end
+
+    it "rejects an untrusted OAuth application" do
+      oauth_app.update!(superapp: false)
+      create(:wst_member_role, user: user)
+
+      visit_cms_authorization
+
+      expect(page.status_code).to eq(403)
+      expect(page).to have_text("invalid_scope")
+    end
+
+    it "allows a CMS user through a trusted OAuth application" do
+      create(:wst_member_role, user: user)
+
+      visit_cms_authorization
+
+      query = Rack::Utils.parse_query(URI.parse(current_url).query)
+      expect(query["code"]).to be_present
+    end
+
+    def visit_cms_authorization
+      visit oauth_authorization_path(
+        client_id: oauth_app.uid,
+        redirect_uri: oauth_authorization_url,
+        response_type: "code",
+        scope: "openid profile email cms",
+      )
+
+      fill_in "user_login", with: user.email
+      fill_in "user_password", with: user.password
+      click_button "Sign in"
     end
   end
 
