@@ -708,6 +708,9 @@ en:
         public: 'Access your public data (name, WCA ID, gender, citizenship, and profile picture)'
         dob: 'Access your date of birth'
         email: 'Access your email address'
+        read_registrations: 'View your registration and payment details, or registrations for competitions you manage'
+        manage_registrations: 'Create and change registrations, start registration payments, or manage registrations for competitions you organize'
+        manage_live_results: 'View and change live results for competitions where you can enter results'
         manage_competitions: 'Manage any upcoming competitions you are organizing'
 
     #context: Key used for sign in/sign up

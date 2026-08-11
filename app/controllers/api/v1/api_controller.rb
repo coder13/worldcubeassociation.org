@@ -3,6 +3,10 @@
 class Api::V1::ApiController < ApplicationController
   prepend_before_action :require_user!
 
+  def self.oauth_scope(scope, **)
+    before_action -> { require_oauth_scope!(scope) }, **
+  end
+
   def require_user!
     @current_user = current_user || api_user
     raise WcaExceptions::MustLogIn.new if @current_user.nil?
@@ -19,7 +23,18 @@ class Api::V1::ApiController < ApplicationController
   end
 
   def api_user
-    User.find_by(id: doorkeeper_token&.resource_owner_id) if doorkeeper_token&.accessible?
+    token = doorkeeper_token
+    return unless token&.accessible?
+
+    @oauth_token = token
+    User.find_by(id: token.resource_owner_id)
+  end
+
+  def require_oauth_scope!(scope)
+    return unless @oauth_token
+    return if @oauth_token.scopes.exists?(scope.to_s)
+
+    raise WcaExceptions::NotPermitted.new("Missing required OAuth scope '#{scope}'")
   end
 
   def render_error(http_status, error, data = nil)

@@ -19,6 +19,12 @@ const baseWcaProvider: Provider = {
   issuer: WCA_OIDC_ISSUER,
   clientId: WCA_OIDC_CLIENT_ID,
   clientSecret: WCA_OIDC_CLIENT_SECRET,
+  authorization: {
+    params: {
+      scope:
+        "openid profile email read_registrations manage_registrations manage_live_results manage_competitions",
+    },
+  },
   profile: (profile) => {
     return {
       id: profile.sub,

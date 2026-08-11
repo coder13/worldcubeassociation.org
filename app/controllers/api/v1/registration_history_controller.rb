@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Api::V1::RegistrationHistoryController < Api::V1::ApiController
+  oauth_scope :read_registrations, only: :show
+
   def show
     registration_id = params.require(:registration_id)
     registration = Registration.find(registration_id)

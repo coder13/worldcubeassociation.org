@@ -3,6 +3,7 @@
 class Api::V1::Live::LiveController < Api::V1::ApiController
   protect_from_forgery with: :null_session
   skip_before_action :require_user!, only: %i[round_results by_person podiums rounds]
+  oauth_scope :manage_live_results, except: %i[round_results by_person podiums rounds]
   before_action :competition_from_params
   before_action :require_scoretaking_internal, except: :round_results
 
