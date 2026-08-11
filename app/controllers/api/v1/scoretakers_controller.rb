@@ -5,6 +5,8 @@ class Api::V1::ScoretakersController < Api::V1::ApiController
 
   protect_from_forgery with: :null_session
 
+  oauth_scope :manage_live_results, only: :index
+  oauth_scope :manage_competitions, only: %i[create destroy]
   before_action :set_competition
 
   def index
