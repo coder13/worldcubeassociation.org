@@ -204,6 +204,10 @@ Devise.setup do |config|
   # change their passwords.
   config.reset_password_within = 6.hours
 
+  # A password reset proves control of the email account, but it does not
+  # satisfy the second factor. Require a normal sign-in after every reset.
+  config.sign_in_after_reset_password = false
+
   # ==> Configuration for :encryptable
   # Allow you to use another encryption algorithm besides bcrypt (default). You can use
   # :sha1, :sha512 or encryptors from others authentication tools as :clearance_sha1,

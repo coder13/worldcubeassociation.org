@@ -8,7 +8,6 @@
 <ul>
   <li><%= t("devise.sessions.new.2fa.options.app") %></li>
   <li><%= t("devise.sessions.new.2fa.options.recovery") %></li>
-  <li><%= t("devise.sessions.new.2fa.options.email") %></li>
 </ul>
 
 <% status = @user.otp_required_for_login ? t("devise.sessions.new.2fa.enabled") : t("devise.sessions.new.2fa.disabled") %>
@@ -54,9 +53,6 @@
   <p class="help-block"><%= t("devise.sessions.new.2fa.backup_codes_warning") %></p>
   <pre id="backup_codes" style="display: none;">
   </pre>
-
-  <h3><%= t("devise.sessions.new.2fa.email_auth") %></h3>
-  <p><%= t("devise.sessions.new.2fa.email_auth_desc") %></p>
 
   <h2><%= t("devise.sessions.new.2fa.disable_section_title") %></h2>
 

@@ -42,19 +42,21 @@ RSpec.feature "Sign in with 2FA" do
       expect(page).to have_text "Signed in successfully"
     end
 
-    it 'can send a OTP by email', :js do
-      visit "/users/sign_in"
+    it 'requires 2FA after a password reset' do
+      reset_token = user.send_reset_password_instructions
+
+      visit edit_user_password_path(reset_password_token: reset_token)
+      fill_in "user[password]", with: "new-password"
+      fill_in "user[password_confirmation]", with: "new-password"
+      click_button "Change my password"
+
+      expect(page).to have_current_path(new_user_session_path)
+
       fill_in "Email", with: user.email
-      fill_in "user[password]", with: "wca"
+      fill_in "user[password]", with: "new-password"
       click_button "Sign in"
+
       expect(page).to have_text "Enter your two-factor authentication code"
-      expect(TwoFactorMailer).to receive(:send_otp_to_user).with(user).and_call_original
-      accept_alert("You have been sent a code by email. The code is valid for 2 minutes. You may ask for a new code in 2 minutes.") do
-        click_on "Get a code by email"
-      end
-      # NOTE: It's pointless to check the OTP here, as it's user.current_otp (tested
-      # earlier). And the mailer spec makes sure the code is included in the
-      # email.
     end
   end
 end
