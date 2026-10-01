@@ -7,6 +7,7 @@ import type { ElementType } from "react";
 type ImageRawProps = {
   src?: string;
   srcSet?: string;
+  sizes?: string;
   alt: string;
 };
 

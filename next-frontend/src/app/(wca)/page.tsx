@@ -63,6 +63,7 @@ type TwoBlocksSpanConfig = { left: number; right: number };
 // The gaps between blocks and the padding around them read as one rhythm, so they
 //   share a value rather than drifting apart.
 const HOMEPAGE_SPACING = { base: "3.5", md: "6", lg: "8" };
+const HALF_WIDTH_IMAGE_SIZES = "(max-width: 768px) 100vw, 50vw";
 
 const RATIO_GRID_MAP: Record<TwoBlocksRatio, TwoBlocksSpanConfig> = {
   "1/3 & 2/3": { left: 1, right: 2 },
@@ -84,6 +85,7 @@ const TextCard = ({ block }: { block: TextCardBlock }) => {
           media={block.headerImage as Media}
           aspectRatio="3/1"
           borderTopRadius="wca"
+          sizes={HALF_WIDTH_IMAGE_SIZES}
         />
       )}
       <Card.Body>
@@ -163,6 +165,7 @@ const BannerImageWithGradient = ({
         width="full"
         maxHeight="sm"
         bg={targetColor}
+        sizes={boxWidth === "50%" ? HALF_WIDTH_IMAGE_SIZES : "100vw"}
       />
       <AbsoluteCenter
         width="101%" // weirdly enough, 100% (or "full") creates a tiny gap even though it shouldn't. Shout if you know how to fix this!
@@ -217,6 +220,7 @@ const ImageBanner = ({ block }: { block: ImageBannerBlock }) => {
                 width="auto"
                 height="full"
                 fit="contain"
+                sizes="25vw"
               />
             </Float>
           )}
@@ -241,6 +245,7 @@ const ImageOnlyCardImage = ({ block }: { block: ImageOnlyCardBlock }) => {
       altFallback={block.heading}
       aspectRatio="2/1"
       maxHeight="10rem" // somewhat arbitrary, if you have a better idea please shout!
+      sizes={HALF_WIDTH_IMAGE_SIZES}
     />
   );
 };
@@ -372,6 +377,7 @@ const TestimonialsSpinner = ({ block }: { block: TestimonialsBlock }) => {
                   media={testimonial.image as Media}
                   altFallback={testimonial.punchline}
                   maxW={{ base: "full", md: "1/3" }}
+                  sizes="(max-width: 768px) 100vw, 33vw"
                 />
                 <Card.Body>
                   <Card.Title textStyle={{ base: "h3", md: "h1" }}>
