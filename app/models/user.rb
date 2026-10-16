@@ -130,6 +130,7 @@ class User < ApplicationRecord
          :confirmable
 
   ABSOLUTE_SESSION_TIMEOUT = 90.days
+  EXTEND_SESSION_COOKIE_DENYLIST = ExtendSessionCookieDenylist.new
   # The start time of the remembered session, stored in its cookie.
   attr_accessor :remembered_session_started_at
 
@@ -154,11 +155,11 @@ class User < ApplicationRecord
   end
 
   def extend_remember_period # rubocop:disable Naming/PredicateMethod
-    !staff_or_any_delegate?
+    !EXTEND_SESSION_COOKIE_DENYLIST.restricted?(id)
   end
 
   def forget_me!
-    return super if staff_or_any_delegate?
+    return super if EXTEND_SESSION_COOKIE_DENYLIST.restricted?(id)
     return unless persisted?
 
     self.remember_token = nil if respond_to?(:remember_token)
