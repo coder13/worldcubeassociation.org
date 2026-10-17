@@ -1,0 +1,42 @@
+.passkeys-page {
+  max-width: 800px;
+  padding-top: 24px;
+  padding-bottom: 32px;
+  overflow-wrap: anywhere;
+
+  h2 {
+    font-size: 22px;
+  }
+
+  .panel-body > h2:first-child {
+    margin-top: 0;
+  }
+
+  .passkeys-card-name {
+    margin: 0 0 12px;
+    font-size: 18px;
+  }
+}
+
+.passkeys-page-form {
+  max-width: 560px;
+}
+
+.passkeys-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.passkeys-card-actions,
+.passkeys-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

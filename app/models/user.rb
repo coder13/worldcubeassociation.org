@@ -4,6 +4,8 @@ require "uri"
 require "fileutils"
 
 class User < ApplicationRecord
+  has_many :passkeys, dependent: :destroy
+  has_many :passkey_challenges, dependent: :delete_all
   has_many :competition_delegates, foreign_key: "delegate_id", inverse_of: :delegate
   # This gives all the competitions where the user is marked as a Delegate,
   # regardless of the competition's status.

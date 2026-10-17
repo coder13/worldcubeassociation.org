@@ -48,6 +48,9 @@
       <li><a href="#preferences" data-toggle="tab"><%= t '.preferences' %></a></li>
       <li><a href="<%= protected_tab("#password") %>" data-toggle="tab"><%= t '.password' %></a></li>
       <li><a href="<%= protected_tab("#2fa") %>" data-toggle="tab">2FA</a></li>
+      <% if EnvConfig.PASSKEYS_ENABLED? %>
+        <li><%= link_to t('passkeys.title'), passkeys_path %></li>
+      <% end %>
     <% end %>
     <% if current_user.can_change_users_avatar?(@user) %>
       <li><a href="#avatar" data-toggle="tab">Avatar</a></li>

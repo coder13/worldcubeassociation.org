@@ -1,0 +1,37 @@
+<% provide(:title, t('passkeys.title')) %>
+<div class="container passkeys-page">
+  <p><%= link_to t('passkeys.back'), edit_user_path(current_user) %></p>
+  <h1><%= t('passkeys.title') %></h1>
+  <section class="panel panel-default" aria-labelledby="passkey-benefit">
+    <div class="panel-body">
+      <h2 id="passkey-benefit"><%= t('passkeys.benefit') %></h2>
+      <p><%= t('passkeys.description') %></p>
+      <p><%= t('passkeys.storage') %></p>
+      <p><%= link_to t('passkeys.add'), new_passkey_path, class: 'btn btn-primary' %></p>
+    </div>
+  </section>
+  <h2><%= t('passkeys.your_passkeys') %></h2>
+  <% if @passkeys.empty? %>
+    <p><%= t('passkeys.empty') %></p>
+  <% end %>
+  <ul class="list-unstyled">
+    <% @passkeys.each do |passkey| %>
+      <li class="panel panel-default">
+        <div class="panel-body">
+          <div class="passkeys-card">
+            <div>
+              <h3 class="passkeys-card-name"><%= passkey.name %></h3>
+              <p class="text-muted"><%= t('passkeys.created', date: l(passkey.created_at, format: :long)) %></p>
+              <p class="text-muted"><%= passkey.last_used_at ? t('passkeys.last_used', date: l(passkey.last_used_at, format: :long)) : t('passkeys.never_used') %></p>
+            </div>
+            <div class="passkeys-card-actions">
+              <%= link_to t('passkeys.rename'), edit_passkey_path(passkey), class: 'btn btn-default', aria: { label: t('passkeys.rename_named', name: passkey.name) } %>
+              <%= link_to t('passkeys.delete'), confirm_destroy_passkey_path(passkey), class: 'btn btn-default text-danger', aria: { label: t('passkeys.delete_named', name: passkey.name) } %>
+            </div>
+          </div>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+  <p class="text-muted"><%= t('passkeys.password_backup') %></p>
+</div>

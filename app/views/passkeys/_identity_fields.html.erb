@@ -1,0 +1,10 @@
+<div class="form-group">
+  <%= label_tag "#{prefix}_password", t('passkeys.password') %>
+  <%= password_field_tag :password, nil, id: "#{prefix}_password", autocomplete: 'current-password', required: true, class: 'form-control' %>
+</div>
+<% if current_user.two_factor_enabled? %>
+  <div class="form-group">
+    <%= label_tag "#{prefix}_otp", t('passkeys.otp') %>
+    <%= text_field_tag :otp_attempt, nil, id: "#{prefix}_otp", autocomplete: 'one-time-code', required: true, class: 'form-control' %>
+  </div>
+<% end %>

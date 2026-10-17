@@ -770,6 +770,7 @@ module DatabaseDumper
           unconfirmed_email
           session_validity_token
           otp_secret
+          passkey_user_handle
         ],
         fake_values: {
           "dob" => "'1954-12-04'",
@@ -969,6 +970,8 @@ module DatabaseDumper
     "trainee_delegate_applications" => :skip_all_rows,
     "trainee_delegate_conversations" => :skip_all_rows,
     "trainee_delegate_recommendations" => :skip_all_rows,
+    "passkeys" => :skip_all_rows,
+    "passkey_challenges" => :skip_all_rows,
   }.freeze
 
   RESULTS_SANITIZERS = {
