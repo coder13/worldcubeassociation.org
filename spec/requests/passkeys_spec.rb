@@ -367,5 +367,31 @@ RSpec.describe 'Passkeys' do
     it 'rejects tokenless authentication requests' do
       expect { post authentication_options_passkeys_path, as: :json }.to raise_error(ActionController::InvalidAuthenticityToken)
     end
+
+    it 'accepts the page CSRF token at both endpoints of each ceremony' do
+      sign_in account
+      get passkeys_path
+      token = response.parsed_body.at_css('meta[name="csrf-token"]')['content']
+      headers = { 'X-CSRF-Token' => token }
+      post registration_options_passkeys_path, params: { password: 'wca' }, headers: headers, as: :json
+      expect(response).to have_http_status(:ok)
+      payload = client.create(challenge: response.parsed_body.fetch('challenge'), user_verified: true)
+      post passkeys_path, params: { name: 'My laptop', credential: payload }, headers: headers, as: :json
+      expect(response).to have_http_status(:ok)
+
+      sign_out account
+      get new_user_session_path
+      token = response.parsed_body.at_css('meta[name="csrf-token"]')['content']
+      headers = { 'X-CSRF-Token' => token }
+      post authentication_options_passkeys_path, headers: headers, as: :json
+      expect(response).to have_http_status(:ok)
+      payload = client.get(
+        challenge: response.parsed_body.fetch('challenge'),
+        user_handle: WebAuthn.configuration.encoder.decode(account.reload.passkey_user_handle),
+        user_verified: true,
+      )
+      post authenticate_passkeys_path, params: { credential: payload }, headers: headers, as: :json
+      expect(response).to have_http_status(:ok)
+    end
   end
 end

@@ -24,7 +24,9 @@ document.querySelectorAll('[data-passkey-form]').forEach(function (form) {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'X-CSRF-Token': form.querySelector('[name="authenticity_token"]').value
+        // A form token only covers its action. Both ceremony endpoints need
+        // the page token from Rails' csrf_meta_tags.
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
       },
       body: JSON.stringify(body)
     });

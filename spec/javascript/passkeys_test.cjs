@@ -22,7 +22,7 @@ function browser({ ceremony = 'authentication', supported = true, cancel = false
         '[data-passkey-submit]': button,
         '[data-passkey-error]': error,
         '[data-passkey-unsupported]': unsupported,
-        '[name="authenticity_token"]': { value: 'csrf token' },
+        '[name="authenticity_token"]': { value: 'form csrf token' },
       }[selector];
     },
     querySelectorAll() { return [password, otp]; },
@@ -42,7 +42,10 @@ function browser({ ceremony = 'authentication', supported = true, cancel = false
   vm.runInNewContext(source, {
     window: { isSecureContext: supported, PublicKeyCredential, location: { assign: (url) => redirects.push(url) } },
     PublicKeyCredential,
-    document: { querySelectorAll: () => [form] },
+    document: {
+      querySelectorAll: () => [form],
+      querySelector: (selector) => selector === 'meta[name="csrf-token"]' ? { content: 'page csrf token' } : null,
+    },
     navigator: { credentials: { create: credentials('create'), get: credentials('get') } },
     FormData: class { constructor() { return Object.entries({ name: 'My laptop', password: password.value, otp_attempt: otp.value }); } },
     fetch: async (url, request) => {
@@ -66,7 +69,8 @@ test('registration sends current credentials only to the options endpoint', asyn
   assert.deepEqual(page.calls, ['parse creation', 'create']);
   assert.deepEqual(page.requests[0].body, { password: 'current password', otp_attempt: '123456' });
   assert.deepEqual(page.requests[1].body, { name: 'My laptop', credential: { id: 'credential', type: 'public-key' } });
-  assert.equal(page.requests[0].headers['X-CSRF-Token'], 'csrf token');
+  assert.equal(page.requests[0].headers['X-CSRF-Token'], 'page csrf token');
+  assert.equal(page.requests[1].headers['X-CSRF-Token'], 'page csrf token');
   assert.equal(page.requests[0].credentials, 'same-origin');
   assert.deepEqual(page.redirects, ['/account']);
   assert.equal(page.password.value, '');
@@ -77,6 +81,7 @@ test('sign-in requests a credential and redirects after verification', async () 
   const page = browser();
   await page.form.submit({ preventDefault() {} });
   assert.deepEqual(page.calls, ['parse request', 'get']);
+  assert.ok(page.requests.every(request => request.headers['X-CSRF-Token'] === 'page csrf token'));
   assert.deepEqual(page.redirects, ['/account']);
   assert.equal(page.button.disabled, false);
 });
