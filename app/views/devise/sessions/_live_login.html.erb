@@ -5,5 +5,9 @@
 
   <div class="panel-body">
       <%= render 'password_form' %>
+      <% if EnvConfig.PASSKEYS_ENABLED? %>
+        <hr>
+        <%= render 'passkeys/sign_in' %>
+      <% end %>
   </div>
 </div>

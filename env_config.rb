@@ -103,6 +103,7 @@ EnvConfig = SuperConfig.new(raise_exception: !is_compiling_assets) do
   end
 
   optional :ROOT_URL, :string, default_root_url
+  optional :PASSKEYS_ENABLED, :bool, false
   optional :OIDC_ISSUER, :string, default_root_url
   # Where the Next frontend is served. The redesigned sign in and sign up pages
   # send people onwards to it, and it serves its own /persons and /delegates.

@@ -1,0 +1,20 @@
+en:
+  passkeys:
+    title: Passkeys
+    description: "Use a passkey to sign in with your device PIN, fingerprint, or face. Keep your password as a backup."
+    back: Back to account settings
+    empty: You do not have any passkeys.
+    add: Add a passkey
+    name: Passkey name
+    password: Current password
+    otp: Two-factor code or backup code
+    sign_in: Sign in with a passkey
+    delete: Delete this passkey
+    delete_confirm: "Delete this passkey? You can still sign in with your password."
+    deleted: The passkey was deleted.
+    created: "Created: %{date}"
+    last_used: "Last used: %{date}"
+    never_used: This passkey is unused.
+    unsupported: Passkeys require HTTPS or localhost and a browser with WebAuthn JSON support.
+    error: "The passkey request failed. Check your details and try again."
+    cancelled: "The passkey request was cancelled or timed out. Try again, or use your password."

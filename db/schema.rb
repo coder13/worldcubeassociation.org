@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_29_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_17_180000) do
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -943,6 +943,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_170000) do
     t.index ["access_grant_id"], name: "index_oauth_openid_requests_on_access_grant_id"
   end
 
+  create_table "passkey_challenges", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "user_id"
+    t.string "challenge", null: false
+    t.string "ceremony", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["expires_at"], name: "index_passkey_challenges_on_expires_at"
+    t.index ["user_id"], name: "index_passkey_challenges_on_user_id"
+  end
+
+  create_table "passkeys", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "credential_id", limit: 1364, null: false, collation: "ascii_bin"
+    t.text "public_key", null: false
+    t.bigint "sign_count", default: 0, null: false
+    t.string "name", null: false
+    t.datetime "last_used_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["credential_id"], name: "index_passkeys_on_credential_id", unique: true
+    t.index ["user_id"], name: "index_passkeys_on_user_id"
+  end
+
   create_table "payment_intents", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "canceled_at", precision: nil
     t.bigint "cancellation_source_id"
@@ -1619,6 +1643,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_170000) do
     t.text "otp_backup_codes"
     t.boolean "otp_required_for_login", default: false
     t.string "otp_secret"
+    t.string "passkey_user_handle", collation: "ascii_bin"
     t.bigint "pending_avatar_id"
     t.string "preferred_locale", limit: 255
     t.boolean "receive_delegate_reports", default: false, null: false
@@ -1637,6 +1662,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_170000) do
     t.index ["delegate_id_to_handle_wca_id_claim"], name: "index_users_on_delegate_id_to_handle_wca_id_claim"
     t.index ["delegate_reports_region_type", "delegate_reports_region_id"], name: "index_users_on_delegate_reports_region"
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["passkey_user_handle"], name: "index_users_on_passkey_user_handle", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["wca_id"], name: "index_users_on_wca_id", unique: true
   end
@@ -1728,6 +1754,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_170000) do
   add_foreign_key "matched_scrambles", "external_scrambles"
   add_foreign_key "matched_scrambles", "matched_scramble_sets", on_delete: :cascade
   add_foreign_key "oauth_openid_requests", "oauth_access_grants", column: "access_grant_id", on_delete: :cascade
+  add_foreign_key "passkey_challenges", "users"
+  add_foreign_key "passkeys", "users"
   add_foreign_key "payment_intents", "users", column: "initiated_by_id"
   add_foreign_key "paypal_records", "paypal_records", column: "parent_record_id"
   add_foreign_key "potential_duplicate_persons", "duplicate_checker_job_runs"

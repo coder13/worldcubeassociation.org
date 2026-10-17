@@ -36,6 +36,14 @@ Rails.application.routes.draw do
     delete 'users/sign-out-other' => 'sessions#destroy_other', as: :destroy_other_user_sessions
   end
 
+  resources :passkeys, only: %i[index create destroy] do
+    collection do
+      post :registration_options
+      post :authentication_options
+      post :authenticate
+    end
+  end
+
   post 'registration/:id/load-payment-intent/:payment_integration' => 'registrations#load_payment_intent', as: :registration_payment_intent
   post 'competitions/:competition_id/refund/:payment_integration/:payment_id' => 'registrations#refund_payment', as: :registration_payment_refund
   get 'competitions/:competition_id/payment-completion/:payment_integration' => 'registrations#payment_completion', as: :registration_payment_completion
