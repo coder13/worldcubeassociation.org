@@ -2,23 +2,35 @@
 
 class PasskeysController < ApplicationController
   class InvalidCeremony < StandardError; end
+  class InvalidIdentity < InvalidCeremony; end
   MAX_BINARY_FIELD_BYTES = 128.kilobytes
 
   before_action :require_passkeys_enabled
   before_action :disable_caching
   before_action :authenticate_user!, except: %i[authentication_options authenticate]
   before_action :require_signed_out, only: %i[authentication_options authenticate]
+  before_action :set_passkey, only: %i[edit update confirm_destroy destroy]
   before_action :authenticate_account_owner, only: %i[registration_options destroy]
 
   protect_from_forgery with: :exception, prepend: true
-  rate_limit to: 10, within: 1.minute, except: :index if Rails.env.production?
+  rate_limit to: 10, within: 1.minute, only: %i[registration_options create update destroy authentication_options authenticate] if Rails.env.production?
 
   rescue_from InvalidCeremony, WebAuthn::Error, JSON::ParserError, ArgumentError, OpenSSL::OpenSSLError,
               CBOR::UnpackError, CBOR::TypeError, ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique,
               with: :invalid_ceremony
+  rescue_from InvalidIdentity, with: :invalid_identity
 
   def index
     @passkeys = current_user.passkeys.order(:created_at)
+  end
+
+  def new
+  end
+
+  def edit
+  end
+
+  def confirm_destroy
   end
 
   def registration_options
@@ -42,17 +54,33 @@ class PasskeysController < ApplicationController
     verify_credential!(credential, challenge.challenge)
     raise InvalidCeremony unless credential.raw_id == credential.response.authenticator_data.attested_credential_data.id
 
-    current_user.passkeys.create!(
-      credential_id: credential.id,
-      public_key: credential.public_key,
-      sign_count: credential.sign_count,
-      name: params.expect(:name),
-    )
-    render json: { redirect_url: passkeys_path }
+    name = params[:name]
+    raise InvalidCeremony unless name.nil? || name.is_a?(String)
+
+    passkey = current_user.with_lock do
+      current_user.passkeys.create!(
+        credential_id: credential.id,
+        public_key: credential.public_key,
+        sign_count: credential.sign_count,
+        name: name&.strip.presence || next_passkey_name,
+      )
+    end
+    flash[:notice] = t('passkeys.created_success')
+    render json: { redirect_url: edit_passkey_path(passkey) }
+  end
+
+  def update
+    name = params.expect(passkey: [:name])[:name]
+    @passkey.name = name.strip if name.is_a?(String) && name.strip.present?
+    if @passkey.save
+      redirect_to passkeys_path, notice: t('passkeys.renamed'), status: :see_other
+    else
+      render :edit, status: :unprocessable_content
+    end
   end
 
   def destroy
-    current_user.passkeys.find(params.expect(:id)).destroy!
+    @passkey.destroy!
     redirect_to passkeys_path, notice: t('passkeys.deleted'), status: :see_other
   end
 
@@ -89,6 +117,17 @@ class PasskeysController < ApplicationController
 
   private
 
+    def set_passkey
+      @passkey = current_user.passkeys.find(params.expect(:id))
+    end
+
+    def next_passkey_name
+      names = current_user.passkeys.pluck(:name)
+      number = 1
+      number += 1 while names.include?(t('passkeys.default_name', number: number))
+      t('passkeys.default_name', number: number)
+    end
+
     def verify_credential!(credential, challenge, **attributes)
       credential.verify(challenge, user_presence: true, user_verification: true, **attributes)
       # webauthn 3.4 also accepts UV as presence. These interactive ceremonies
@@ -110,11 +149,11 @@ class PasskeysController < ApplicationController
 
     def authenticate_account_owner
       password = params[:password]
-      raise InvalidCeremony unless password.is_a?(String) && current_user.valid_password?(password)
+      raise InvalidIdentity unless password.is_a?(String) && current_user.valid_password?(password)
       return unless current_user.two_factor_enabled?
 
       otp = params[:otp_attempt]
-      raise InvalidCeremony unless otp.is_a?(String) && (current_user.validate_and_consume_otp!(otp) || current_user.invalidate_otp_backup_code!(otp))
+      raise InvalidIdentity unless otp.is_a?(String) && (current_user.validate_and_consume_otp!(otp) || current_user.invalidate_otp_backup_code!(otp))
     end
 
     def issue_challenge!(challenge, ceremony, user: nil)
@@ -154,6 +193,15 @@ class PasskeysController < ApplicationController
         render json: { error: { message: t('passkeys.error') } }, status: :unprocessable_content
       else
         redirect_to passkeys_path, alert: t('passkeys.error'), status: :see_other
+      end
+    end
+
+    def invalid_identity
+      if action_name == 'destroy' && !request.format.json?
+        @identity_error = t('passkeys.identity_error')
+        render :confirm_destroy, status: :unprocessable_content
+      else
+        render json: { error: { message: t('passkeys.identity_error') } }, status: :unprocessable_content
       end
     end
 end

@@ -36,7 +36,10 @@ Rails.application.routes.draw do
     delete 'users/sign-out-other' => 'sessions#destroy_other', as: :destroy_other_user_sessions
   end
 
-  resources :passkeys, only: %i[index create destroy] do
+  resources :passkeys, only: %i[index new create edit update destroy] do
+    member do
+      get :confirm_destroy
+    end
     collection do
       post :registration_options
       post :authentication_options

@@ -1,36 +1,37 @@
 <% provide(:title, t('passkeys.title')) %>
-<div class="container">
-  <h1><%= t('passkeys.title') %></h1>
-  <p><%= t('passkeys.description') %></p>
+<div class="container passkeys-page">
   <p><%= link_to t('passkeys.back'), edit_user_path(current_user) %></p>
-
+  <h1><%= t('passkeys.title') %></h1>
+  <section class="panel panel-default" aria-labelledby="passkey-benefit">
+    <div class="panel-body">
+      <h2 id="passkey-benefit"><%= t('passkeys.benefit') %></h2>
+      <p><%= t('passkeys.description') %></p>
+      <p><%= t('passkeys.storage') %></p>
+      <p><%= link_to t('passkeys.add'), new_passkey_path, class: 'btn btn-primary' %></p>
+    </div>
+  </section>
+  <h2><%= t('passkeys.your_passkeys') %></h2>
   <% if @passkeys.empty? %>
     <p><%= t('passkeys.empty') %></p>
   <% end %>
-  <% @passkeys.each do |passkey| %>
-    <div class="panel panel-default">
-      <div class="panel-heading"><%= passkey.name %></div>
-      <div class="panel-body">
-        <p><%= t('passkeys.created', date: l(passkey.created_at, format: :short)) %></p>
-        <p><%= passkey.last_used_at ? t('passkeys.last_used', date: l(passkey.last_used_at, format: :short)) : t('passkeys.never_used') %></p>
-        <%= form_tag passkey_path(passkey), method: :delete do %>
-          <%= render 'identity_fields', prefix: "passkey_#{passkey.id}" %>
-          <%= submit_tag t('passkeys.delete'), class: 'btn btn-danger', data: { confirm: t('passkeys.delete_confirm') } %>
-        <% end %>
-      </div>
-    </div>
-  <% end %>
-
-  <h2><%= t('passkeys.add') %></h2>
-  <%= form_tag passkeys_path, data: { passkey_form: 'registration', options_url: registration_options_passkeys_path, error: t('passkeys.error'), cancelled: t('passkeys.cancelled') } do %>
-    <div class="form-group">
-      <%= label_tag :name, t('passkeys.name') %>
-      <%= text_field_tag :name, nil, maxlength: Passkey::NAME_MAX_LENGTH, required: true, class: 'form-control' %>
-    </div>
-    <%= render 'identity_fields', prefix: 'new_passkey' %>
-    <%= submit_tag t('passkeys.add'), class: 'btn btn-primary', disabled: true, data: { passkey_submit: true } %>
-    <p class="help-block" data-passkey-unsupported><%= t('passkeys.unsupported') %></p>
-    <p role="alert" class="text-danger" data-passkey-error></p>
-  <% end %>
+  <ul class="list-unstyled">
+    <% @passkeys.each do |passkey| %>
+      <li class="panel panel-default">
+        <div class="panel-body">
+          <div class="passkeys-card">
+            <div>
+              <h3 class="passkeys-card-name"><%= passkey.name %></h3>
+              <p class="text-muted"><%= t('passkeys.created', date: l(passkey.created_at, format: :long)) %></p>
+              <p class="text-muted"><%= passkey.last_used_at ? t('passkeys.last_used', date: l(passkey.last_used_at, format: :long)) : t('passkeys.never_used') %></p>
+            </div>
+            <div class="passkeys-card-actions">
+              <%= link_to t('passkeys.rename'), edit_passkey_path(passkey), class: 'btn btn-default', aria: { label: t('passkeys.rename_named', name: passkey.name) } %>
+              <%= link_to t('passkeys.delete'), confirm_destroy_passkey_path(passkey), class: 'btn btn-default text-danger', aria: { label: t('passkeys.delete_named', name: passkey.name) } %>
+            </div>
+          </div>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+  <p class="text-muted"><%= t('passkeys.password_backup') %></p>
 </div>
-<%= javascript_include_tag 'passkeys', defer: true %>

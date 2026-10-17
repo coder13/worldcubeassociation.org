@@ -1,6 +1,7 @@
-<%= form_tag authenticate_passkeys_path, data: { passkey_form: 'authentication', options_url: authentication_options_passkeys_path, error: t('passkeys.error'), cancelled: t('passkeys.cancelled') } do %>
+<%= form_tag authenticate_passkeys_path, data: { passkey_form: 'authentication', options_url: authentication_options_passkeys_path, error: t('passkeys.error'), cancelled: t('passkeys.cancelled'), waiting: t('passkeys.sign_in_waiting'), saving: t('passkeys.signing_in') } do %>
   <%= submit_tag t('passkeys.sign_in'), class: 'btn btn-default', disabled: true, data: { passkey_submit: true } %>
   <p class="help-block" data-passkey-unsupported><%= t('passkeys.unsupported') %></p>
-  <p role="alert" class="text-danger" data-passkey-error></p>
+  <p role="status" aria-live="polite" aria-atomic="true" data-passkey-status></p>
+  <p role="alert" class="text-danger" tabindex="-1" data-passkey-error></p>
 <% end %>
 <%= javascript_include_tag 'passkeys', defer: true %>

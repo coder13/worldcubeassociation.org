@@ -8,6 +8,7 @@ document.querySelectorAll('[data-passkey-form]').forEach(function (form) {
 
   var button = form.querySelector('[data-passkey-submit]');
   var errorElement = form.querySelector('[data-passkey-error]');
+  var statusElement = form.querySelector('[data-passkey-status]');
   var supported = window.isSecureContext && window.PublicKeyCredential &&
     typeof PublicKeyCredential.parseCreationOptionsFromJSON === 'function' &&
     typeof PublicKeyCredential.parseRequestOptionsFromJSON === 'function' &&
@@ -30,7 +31,12 @@ document.querySelectorAll('[data-passkey-form]').forEach(function (form) {
       },
       body: JSON.stringify(body)
     });
-    if (!response.ok) { throw new Error('Passkey request failed'); }
+    if (!response.ok) {
+      var problem = await response.json();
+      var error = new Error('Passkey request failed');
+      error.userMessage = problem.error && problem.error.message;
+      throw error;
+    }
     return response.json();
   }
 
@@ -39,6 +45,8 @@ document.querySelectorAll('[data-passkey-form]').forEach(function (form) {
     if (button.disabled) { return; }
     button.disabled = true;
     errorElement.textContent = '';
+    var registration = form.dataset.passkeyForm === 'registration';
+    statusElement.textContent = registration ? form.dataset.checking : form.dataset.waiting;
     var fields = Object.fromEntries(new FormData(form));
 
     try {
@@ -46,21 +54,25 @@ document.querySelectorAll('[data-passkey-form]').forEach(function (form) {
         password: fields.password,
         otp_attempt: fields.otp_attempt
       });
-      var registration = form.dataset.passkeyForm === 'registration';
+      statusElement.textContent = form.dataset.waiting;
       var publicKey = registration ?
         PublicKeyCredential.parseCreationOptionsFromJSON(options) :
         PublicKeyCredential.parseRequestOptionsFromJSON(options);
       var credential = registration ?
         await navigator.credentials.create({ publicKey: publicKey }) :
         await navigator.credentials.get({ publicKey: publicKey });
+      statusElement.textContent = form.dataset.saving;
       var result = await postJSON(form.action, {
         name: fields.name,
         credential: credential.toJSON()
       });
       window.location.assign(result.redirect_url);
     } catch (error) {
+      statusElement.textContent = '';
       errorElement.textContent = error.name === 'NotAllowedError' ?
-        form.dataset.cancelled : form.dataset.error;
+        form.dataset.cancelled : error.name === 'InvalidStateError' && registration ?
+        form.dataset.duplicate : error.userMessage || form.dataset.error;
+      errorElement.focus();
     } finally {
       form.querySelectorAll('input[type="password"], input[name="otp_attempt"]').forEach(function (input) {
         input.value = '';

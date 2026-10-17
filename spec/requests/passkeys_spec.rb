@@ -39,6 +39,14 @@ RSpec.describe 'Passkeys' do
     it 'disables all passkey endpoints' do
       get passkeys_path
       expect(response).to have_http_status(:not_found)
+      get new_passkey_path
+      expect(response).to have_http_status(:not_found)
+      get edit_passkey_path(1)
+      expect(response).to have_http_status(:not_found)
+      get confirm_destroy_passkey_path(1)
+      expect(response).to have_http_status(:not_found)
+      patch passkey_path(1), params: { passkey: { name: 'Renamed' } }
+      expect(response).to have_http_status(:not_found)
       post registration_options_passkeys_path, as: :json
       expect(response).to have_http_status(:not_found)
       post passkeys_path, as: :json
@@ -57,7 +65,50 @@ RSpec.describe 'Passkeys' do
     end
   end
 
+  describe 'management pages' do
+    before { sign_in account }
+
+    it 'shows a creation link without password or nickname fields on the list' do
+      get passkeys_path
+      expect(response.parsed_body.at_css("a[href='#{new_passkey_path}']")).to be_present
+      expect(response.parsed_body.css('input[type="password"], input[name="name"]')).to be_empty
+    end
+
+    it 'asks for identity confirmation before creation without asking for a nickname' do
+      get new_passkey_path
+      expect(response.parsed_body.at_css('input[name="password"]')).to be_present
+      expect(response.parsed_body.at_css('input[name="name"]')).to be_nil
+      expect(response.parsed_body.at_css('input[name="otp_attempt"]')).to be_nil
+      expect(response.body).to include(CGI.escapeHTML(account.email))
+    end
+
+    it 'shows the two-factor field when the account requires it' do
+      account.update!(otp_required_for_login: true, otp_secret: User.generate_otp_secret)
+      get new_passkey_path
+      expect(response.parsed_body.at_css('input[name="otp_attempt"]')).to be_present
+    end
+  end
+
   describe 'registration' do
+    it 'creates a passkey without a nickname and redirects to optional naming' do
+      payload = registration_payload
+      post passkeys_path, params: { credential: payload }, as: :json
+      passkey = account.passkeys.sole
+      expect(passkey.name).to eq 'Passkey 1'
+      expect(response.parsed_body.fetch('redirect_url')).to eq edit_passkey_path(passkey)
+      get edit_passkey_path(passkey)
+      expect(response.body).to include(I18n.t('passkeys.created_success'))
+      expect(response.parsed_body.at_css('input[name="passkey[name]"]')['required']).to be_nil
+    end
+
+    it 'uses a distinct suggested name when another passkey already has the first name' do
+      passkey = enroll_passkey
+      passkey.update!(name: 'Passkey 1')
+      payload = registration_payload
+      post passkeys_path, params: { credential: payload }, as: :json
+      expect(account.passkeys.order(:id).last.name).to eq 'Passkey 2'
+    end
+
     it 'requires a signed-in account' do
       post registration_options_passkeys_path, params: { password: 'wca' }, as: :json
       expect(response).to have_http_status(:unauthorized)
@@ -332,6 +383,22 @@ RSpec.describe 'Passkeys' do
     it 'requires the current password' do
       delete passkey_path(passkey), params: { password: 'incorrect password' }
       expect(Passkey.exists?(passkey.id)).to be true
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include(I18n.t('passkeys.identity_error'), CGI.escapeHTML(passkey.name))
+    end
+
+    it 'shows a last-passkey warning and confirmation without deleting on GET' do
+      get confirm_destroy_passkey_path(passkey)
+      expect(response.body).to include(I18n.t('passkeys.delete_last'), I18n.t('passkeys.delete_saved_copy'))
+      expect(response.parsed_body.at_css('input[name="password"]')).to be_present
+      expect(Passkey.exists?(passkey.id)).to be true
+    end
+
+    it 'includes two-factor fallback and confirmation for an account with OTP' do
+      account.update!(otp_required_for_login: true, otp_secret: User.generate_otp_secret)
+      get confirm_destroy_passkey_path(passkey)
+      expect(response.body).to include(I18n.t('passkeys.delete_last_with_otp'))
+      expect(response.parsed_body.at_css('input[name="otp_attempt"]')).to be_present
     end
 
     it 'requires an enabled second factor' do
@@ -352,6 +419,54 @@ RSpec.describe 'Passkeys' do
       sign_in create(:user)
       expect { delete passkey_path(passkey), params: { password: 'wca' } }.to raise_error(ActiveRecord::RecordNotFound)
       expect(Passkey.exists?(passkey.id)).to be true
+    end
+  end
+
+  describe 'renaming' do
+    let!(:passkey) { enroll_passkey }
+
+    it 'changes only the nickname without requesting the account password' do
+      original_key = passkey.public_key
+      patch passkey_path(passkey), params: { passkey: { name: 'Personal password manager', public_key: 'replacement' } }
+      expect(response).to redirect_to(passkeys_path)
+      expect(passkey.reload.name).to eq 'Personal password manager'
+      expect(passkey.public_key).to eq original_key
+    end
+
+    it 'keeps the suggested name when the optional input is blank' do
+      patch passkey_path(passkey), params: { passkey: { name: '  ' } }
+      expect(passkey.reload.name).to eq 'My laptop'
+    end
+
+    it 'shows an error without saving an oversized name' do
+      patch passkey_path(passkey), params: { passkey: { name: 'x' * (Passkey::NAME_MAX_LENGTH + 1) } }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(passkey.reload.name).to eq 'My laptop'
+    end
+
+    it 'requires a signed-in account' do
+      sign_out account
+      patch passkey_path(passkey), params: { passkey: { name: 'Not allowed' } }
+      expect(response).to redirect_to(new_user_session_path)
+    end
+
+    context 'with another account' do
+      before do
+        sign_out account
+        sign_in create(:user)
+      end
+
+      it 'does not expose the rename form' do
+        expect { get edit_passkey_path(passkey) }.to raise_error(ActiveRecord::RecordNotFound)
+      end
+
+      it 'does not expose the delete confirmation' do
+        expect { get confirm_destroy_passkey_path(passkey) }.to raise_error(ActiveRecord::RecordNotFound)
+      end
+
+      it 'does not change the name' do
+        expect { patch passkey_path(passkey), params: { passkey: { name: 'Not allowed' } } }.to raise_error(ActiveRecord::RecordNotFound)
+      end
     end
   end
 

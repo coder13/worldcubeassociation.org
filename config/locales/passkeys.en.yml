@@ -1,20 +1,57 @@
 en:
   passkeys:
     title: Passkeys
-    description: "Use a passkey to sign in with your device PIN, fingerprint, or face. Keep your password as a backup."
+    benefit: Sign in without typing your password
+    description: "Use a passkey to sign in with your fingerprint, face, or device PIN."
+    storage: "Save passkeys in your password manager or on a security key. Some password managers make them available on your other devices."
+    password_backup: You can still sign in with your password and any enabled two-factor code.
     back: Back to account settings
-    empty: You do not have any passkeys.
-    add: Add a passkey
-    name: Passkey name
+    back_to_passkeys: Back to passkeys
+    your_passkeys: Your passkeys
+    empty: You do not have any passkeys yet.
+    add: Create a passkey
+    create_intro: Confirm your identity, then follow your browser to save a passkey.
+    ownership: Save passkeys only to your own password manager or security key.
+    account: 'Account:'
+    confirm_identity: Confirm your identity
+    identity_reason: Confirm your current sign-in details before adding a new way to access your account.
+    create_next: Your browser will ask where to save the passkey. You can give it a name afterwards.
+    created_success: Your passkey is ready. You can now use it to sign in.
+    default_name: 'Passkey %{number}'
+    name_title: Name your passkey
+    name: Name (optional)
+    name_help: 'Choose a name you will recognize, such as Personal password manager or Backup security key.'
+    name_optional: Keep the suggested name or choose your own. You can change it later.
+    name_scope: This name appears only on WCA. It does not change the name in your password manager or on your security key.
+    save_name: Save name
+    done: Done
+    rename: Rename
+    rename_named: 'Rename %{name}'
+    renamed: The passkey name was saved.
     password: Current password
     otp: Two-factor code or backup code
     sign_in: Sign in with a passkey
-    delete: Delete this passkey
-    delete_confirm: "Delete this passkey? You can still sign in with your password."
+    delete: Delete passkey
+    delete_named: 'Delete %{name}'
+    delete_title: Delete this passkey?
+    delete_effect: This passkey will no longer work for WCA sign-in. Existing sessions will stay signed in.
+    delete_saved_copy: This does not delete the saved copy in your password manager or on your security key. Delete that copy there too.
+    delete_last: This is your last passkey. After you delete it, use your password to sign in.
+    delete_last_with_otp: This is your last passkey. After you delete it, use your password and two-factor code to sign in.
     deleted: The passkey was deleted.
     created: "Created: %{date}"
     last_used: "Last used: %{date}"
-    never_used: This passkey is unused.
-    unsupported: Passkeys require HTTPS or localhost and a browser with WebAuthn JSON support.
-    error: "The passkey request failed. Check your details and try again."
-    cancelled: "The passkey request was cancelled or timed out. Try again, or use your password."
+    cancel: Cancel
+    never_used: Not used yet
+    unsupported: Passkeys are not available in this browser. Try a recent browser on a secure connection.
+    identity_error: The password or two-factor code was incorrect. Try again.
+    error: The passkey request failed. Try again, or sign in with your password.
+    create_error: The passkey setup did not finish. Try again, or return to your passkeys to see whether it was saved.
+    create_cancelled: No passkey was added. You can try again or return to your passkeys.
+    cancelled: Sign-in was cancelled or timed out. Try again, or use your password.
+    duplicate: A passkey already exists in the selected password manager or security key. Choose another option or use the existing passkey.
+    checking: Checking your sign-in details...
+    create_waiting: Follow your browser to create your passkey...
+    sign_in_waiting: Follow your browser to sign in with your passkey...
+    saving: Saving your passkey...
+    signing_in: Signing you in...

@@ -5,9 +5,10 @@ const vm = require('node:vm');
 
 const source = readFileSync('app/assets/javascripts/passkeys.js', 'utf8');
 
-function browser({ ceremony = 'authentication', supported = true, cancel = false, fail = false } = {}) {
+function browser({ ceremony = 'authentication', supported = true, cancel = false, duplicate = false, fail = false, serverMessage = null, withoutName = false } = {}) {
   const button = { disabled: true };
-  const error = { textContent: '' };
+  const error = { textContent: '', focus() { this.focused = true; } };
+  const status = { textContent: '' };
   const unsupported = { hidden: false };
   const password = { value: 'current password' };
   const otp = { value: '123456' };
@@ -16,11 +17,12 @@ function browser({ ceremony = 'authentication', supported = true, cancel = false
   const calls = [];
   const form = {
     action: '/passkeys/finish',
-    dataset: { passkeyForm: ceremony, optionsUrl: '/passkeys/options', error: 'Request failed', cancelled: 'Cancelled' },
+    dataset: { passkeyForm: ceremony, optionsUrl: '/passkeys/options', error: 'Request failed', cancelled: 'Cancelled', duplicate: 'Already registered', checking: 'Checking', waiting: 'Browser prompt', saving: 'Saving' },
     querySelector(selector) {
       return {
         '[data-passkey-submit]': button,
         '[data-passkey-error]': error,
+        '[data-passkey-status]': status,
         '[data-passkey-unsupported]': unsupported,
         '[name="authenticity_token"]': { value: 'form csrf token' },
       }[selector];
@@ -37,6 +39,7 @@ function browser({ ceremony = 'authentication', supported = true, cancel = false
     calls.push(method);
     assert.equal(options.publicKey.challenge, 'challenge');
     if (cancel) { throw Object.assign(new Error(), { name: 'NotAllowedError' }); }
+    if (duplicate) { throw Object.assign(new Error(), { name: 'InvalidStateError' }); }
     return new PublicKeyCredential();
   };
   vm.runInNewContext(source, {
@@ -47,13 +50,13 @@ function browser({ ceremony = 'authentication', supported = true, cancel = false
       querySelector: (selector) => selector === 'meta[name="csrf-token"]' ? { content: 'page csrf token' } : null,
     },
     navigator: { credentials: { create: credentials('create'), get: credentials('get') } },
-    FormData: class { constructor() { return Object.entries({ name: 'My laptop', password: password.value, otp_attempt: otp.value }); } },
+    FormData: class { constructor() { return Object.entries({ ...(withoutName ? {} : { name: 'My laptop' }), password: password.value, otp_attempt: otp.value }); } },
     fetch: async (url, request) => {
       requests.push({ url, ...request, body: JSON.parse(request.body) });
-      return { ok: !fail, json: async () => url === form.dataset.optionsUrl ? { challenge: 'challenge' } : { redirect_url: '/account' } };
+      return { ok: !fail, json: async () => fail ? { error: { message: serverMessage } } : url === form.dataset.optionsUrl ? { challenge: 'challenge' } : { redirect_url: '/account' } };
     },
   });
-  return { form, button, error, unsupported, password, otp, requests, redirects, calls };
+  return { form, button, error, status, unsupported, password, otp, requests, redirects, calls };
 }
 
 test('unsupported browsers retain a disabled passkey button', () => {
@@ -94,6 +97,8 @@ test('cancellation shows a retry message and clears secrets', async () => {
   assert.equal(page.button.disabled, false);
   assert.equal(page.password.value, '');
   assert.deepEqual(page.redirects, []);
+  assert.equal(page.status.textContent, '');
+  assert.equal(page.error.focused, true);
 });
 
 test('server rejection shows an error without starting WebAuthn', async () => {
@@ -109,4 +114,30 @@ test('a second submit cannot start another pending ceremony', async () => {
   await Promise.all([page.form.submit({ preventDefault() {} }), page.form.submit({ preventDefault() {} })]);
   assert.equal(page.requests.length, 2);
   assert.deepEqual(page.calls, ['parse request', 'get']);
+});
+
+test('creation does not require a nickname before the browser prompt', async () => {
+  const page = browser({ ceremony: 'registration', withoutName: true });
+  await page.form.submit({ preventDefault() {} });
+  assert.deepEqual(page.requests[1].body, { credential: { id: 'credential', type: 'public-key' } });
+  assert.equal(page.status.textContent, 'Saving');
+  assert.deepEqual(page.redirects, ['/account']);
+});
+
+test('identity errors show the server message before opening the browser prompt', async () => {
+  const page = browser({ ceremony: 'registration', fail: true, serverMessage: 'Incorrect sign-in details' });
+  await page.form.submit({ preventDefault() {} });
+  assert.equal(page.error.textContent, 'Incorrect sign-in details');
+  assert.deepEqual(page.calls, []);
+  assert.equal(page.error.focused, true);
+  assert.equal(page.password.value, '');
+});
+
+test('an existing passkey shows a useful retry message', async () => {
+  const page = browser({ ceremony: 'registration', duplicate: true });
+  await page.form.submit({ preventDefault() {} });
+  assert.equal(page.error.textContent, 'Already registered');
+  assert.equal(page.button.disabled, false);
+  assert.equal(page.requests.length, 1);
+  assert.equal(page.status.textContent, '');
 });

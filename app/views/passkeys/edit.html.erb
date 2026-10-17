@@ -1,0 +1,21 @@
+<% provide(:title, t('passkeys.name_title')) %>
+<div class="container passkeys-page passkeys-page-form">
+  <p><%= link_to t('passkeys.back_to_passkeys'), passkeys_path %></p>
+  <h1><%= t('passkeys.name_title') %></h1>
+  <p><%= t('passkeys.name_help') %></p>
+  <p><%= t('passkeys.name_scope') %></p>
+  <% if @passkey.errors.any? %>
+    <%= alert :danger, @passkey.errors.full_messages.join('. ') %>
+  <% end %>
+  <%= form_for @passkey do |form| %>
+    <div class="form-group">
+      <%= form.label :name, t('passkeys.name') %>
+      <%= form.text_field :name, maxlength: Passkey::NAME_MAX_LENGTH, class: 'form-control', aria: { describedby: 'passkey-name-help' } %>
+      <p id="passkey-name-help" class="help-block"><%= t('passkeys.name_optional') %></p>
+    </div>
+    <div class="passkeys-form-actions">
+      <%= form.submit t('passkeys.save_name'), class: 'btn btn-primary' %>
+      <%= link_to t('passkeys.done'), passkeys_path, class: 'btn btn-default' %>
+    </div>
+  <% end %>
+</div>

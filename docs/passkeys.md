@@ -11,10 +11,16 @@ This change adds optional passkey sign-in to the Rails website. It is disabled b
 5. Restart Rails.
 6. Sign in with a password.
 7. Open **Edit profile**, then **Passkeys**.
-8. Enter a name, the current password, and a two-factor code if the account requires one.
-9. Select **Add a passkey**.
-10. Sign out.
-11. Select **Sign in with a passkey** on the sign-in page.
+8. Select **Create a passkey**.
+9. Enter the current password and a two-factor code if the account requires one.
+10. Select **Create a passkey**, then complete the browser prompt.
+11. Keep the suggested name or save a name of your own.
+12. Select **Done**, then sign out.
+13. Select **Sign in with a passkey** on the sign-in page.
+
+The settings page lists passkeys without password fields. Each card links to rename and delete pages.
+Deletion explains the effect, shows the fallback sign-in method for the last passkey, and requires identity confirmation.
+The [UX decision](passkeys-ux.md) compares the alternatives and links to the design guidance.
 
 The browser requires HTTPS, except on localhost. This prototype requires the native WebAuthn JSON methods.
 Unsupported browsers retain the password form. The classic and redesigned Rails sign-in pages use the same passkey form.

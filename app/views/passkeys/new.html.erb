@@ -1,0 +1,26 @@
+<% provide(:title, t('passkeys.add')) %>
+<div class="container passkeys-page passkeys-page-form">
+  <p><%= link_to t('passkeys.back_to_passkeys'), passkeys_path %></p>
+  <h1><%= t('passkeys.add') %></h1>
+  <p><%= t('passkeys.create_intro') %></p>
+  <p><%= t('passkeys.ownership') %></p>
+  <p><%= t('passkeys.account') %> <strong><%= current_user.email %></strong></p>
+  <div class="panel panel-default">
+    <div class="panel-body">
+      <h2><%= t('passkeys.confirm_identity') %></h2>
+      <p><%= t('passkeys.identity_reason') %></p>
+      <%= form_tag passkeys_path, data: { passkey_form: 'registration', options_url: registration_options_passkeys_path, error: t('passkeys.create_error'), cancelled: t('passkeys.create_cancelled'), duplicate: t('passkeys.duplicate'), checking: t('passkeys.checking'), waiting: t('passkeys.create_waiting'), saving: t('passkeys.saving') } do %>
+        <%= render 'identity_fields', prefix: 'new_passkey' %>
+        <p class="help-block"><%= t('passkeys.create_next') %></p>
+        <div class="passkeys-form-actions">
+          <%= submit_tag t('passkeys.add'), class: 'btn btn-primary', disabled: true, data: { passkey_submit: true } %>
+          <%= link_to t('passkeys.cancel'), passkeys_path, class: 'btn btn-default' %>
+        </div>
+        <p class="help-block" data-passkey-unsupported><%= t('passkeys.unsupported') %></p>
+        <p role="status" aria-live="polite" aria-atomic="true" data-passkey-status></p>
+        <p role="alert" class="text-danger" tabindex="-1" data-passkey-error></p>
+      <% end %>
+    </div>
+  </div>
+</div>
+<%= javascript_include_tag 'passkeys', defer: true %>
