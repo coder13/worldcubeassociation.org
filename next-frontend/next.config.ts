@@ -26,13 +26,13 @@ const nextConfig: NextConfig = {
   },
   output: "standalone",
   productionBrowserSourceMaps: true,
-  webpack(config) {
-    if (!process.env.PROPRIETARY_FONT) {
-      config.resolve.alias["@/styles/fonts"] =
-        require("path").resolve(__dirname, "src/styles/fonts/empty-font.ts");
-    }
-    return config;
-  },
+  // webpack(config) {
+    // if (process.env.USE_PRO_FONT !== "true") {
+    //   config.resolve.alias[path.resolve(__dirname, "src/fonts/default")] =
+    //     path.resolve(__dirname, "src/fonts/dev");
+    // }
+    // return config;
+  // },
   async rewrites() {
     return [
       {

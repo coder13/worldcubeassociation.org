@@ -1,6 +1,6 @@
 import localFont from "next/font/local";
 
-const ttNormsPro = localFont({
+export const font = localFont({
   src: [
     {
       path: "./fonts/TTNormsPro/TT_Norms_Pro_Light.woff2",
@@ -34,5 +34,3 @@ const ttNormsPro = localFont({
     },
   ],
 });
-
-export { ttNormsPro };

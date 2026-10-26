@@ -6,24 +6,13 @@ import { Provider as UiProvider } from "@/components/ui/provider";
 import Navbar from "./navbar";
 import Footer from "@/components/Footer";
 import RandomBackground from "@/components/RandomBackground";
-import { Rubik } from "next/font/google";
-import { ttNormsPro } from "@/styles/fonts";
+import { font } from "@/fonts/dev";
 
 export const metadata: Metadata = {
   title: {
     template: "%s | World Cube Association",
     default: "",
   },
-};
-
-const devFont = Rubik({ subsets: ["latin"] });
-
-const computeFont = async () => {
-  if (process.env.PROPRIETARY_FONT === "TTNormsPro") {
-    return ttNormsPro;
-  }
-
-  return devFont;
 };
 
 export const dynamic = "force-dynamic";
@@ -33,11 +22,9 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const appFont = await computeFont();
-
   return (
     <html suppressHydrationWarning>
-      <body className={appFont.className}>
+      <body className={font.className}>
         <WCAQueryClientProvider>
           <AuthProvider>
             <UiProvider>
