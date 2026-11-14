@@ -35,7 +35,7 @@ export default function EventPanel({
 
   const disabled = !canUpdateEvents;
   const event = events.byId[wcifEvent.id];
-  const requiresInternalScoretaking = event.id === 'fto' && scoretakingSoftware !== 'internal';
+  const requiresLiveScoretaking = event.id === 'fto' && !['internal', 'wca_live'].includes(scoretakingSoftware);
 
   const handleRemoveEvent = () => {
     if (wcifEvent.rounds && wcifEvent.rounds.length > 0) {
@@ -102,10 +102,10 @@ export default function EventPanel({
     return (
       <Button
         className="add-event"
-        disabled={!canAddAndRemoveEvents || requiresInternalScoretaking}
+        disabled={!canAddAndRemoveEvents || requiresLiveScoretaking}
         title={
           (!canAddAndRemoveEvents && `Cannot add ${event.name} because the competition is confirmed.`)
-          || (requiresInternalScoretaking && `${event.name} requires the scoretaking software to be set to 'Integrated Live Results'.`)
+          || (requiresLiveScoretaking && I18n.t('competitions.events.fto_requires_live_scoretaking'))
           || ''
         }
         onClick={() => dispatch(addEvent(wcifEvent.id))}
