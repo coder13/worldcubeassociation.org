@@ -54,9 +54,9 @@ RSpec.describe Competition do
       expect(competition).to be_valid
     end
 
-    it "rejects the event with external scoretaking" do
+    it "accepts the event with external scoretaking" do
       competition = build(:competition, starts: Competition::FTO_INTRODUCTION_DATE, event_ids: %w[333 fto], scoretaking_software: :external)
-      expect(competition).to be_invalid_with_errors(scoretaking_software: ["must be set to Integrated Live Results or WCA Live when holding Face Turning Octahedron."])
+      expect(competition).to be_valid
     end
 
     it "accepts adding the event through the WCIF with WCA Live scoretaking" do
@@ -71,41 +71,47 @@ RSpec.describe Competition do
       expect(competition.reload.event_ids).to include("fto")
     end
 
-    it "rejects adding the event through the WCIF with external scoretaking" do
+    it "accepts adding the event through the WCIF with external scoretaking" do
       competition = create(:competition, starts: Competition::FTO_INTRODUCTION_DATE, event_ids: %w[333], scoretaking_software: :external)
       admin = create(:admin)
 
       wcif = competition.to_wcif
       updated_wcif = wcif.merge("events" => wcif["events"] + [{ "id" => "fto", "rounds" => [] }])
 
-      expect { competition.set_wcif!(updated_wcif, admin) }.to raise_error(ActiveRecord::RecordInvalid, /Integrated Live Results or WCA Live/)
-      expect(competition.reload.event_ids).not_to include('fto')
-    end
-
-    it "imports and exports FTO results through WCIF with WCA Live scoretaking" do
-      competition = create(:competition, starts: Competition::FTO_INTRODUCTION_DATE, event_ids: %w[fto], scoretaking_software: :wca_live)
-      round = create(:round, competition: competition, event_id: "fto")
-      registration = create(:registration, :accepted, competition: competition, event_ids: %w[fto])
-      admin = create(:admin)
-
-      result = {
-        "personId" => registration.registrant_id,
-        "ranking" => 1,
-        "attempts" => [3000, 3100, 3200, 3300, -1].map { { "value" => it, "reconstruction" => nil } },
-        "best" => 3000,
-        "average" => 3200,
-      }
-      wcif = competition.reload.to_wcif(authorized: true, version: "2.2")
-      updated_wcif = wcif.merge(
-        "events" => [{ "id" => "fto", "rounds" => [round.to_wcif(version: "2.2").merge("results" => [result])] }],
-      )
-
       competition.set_wcif!(updated_wcif, admin)
 
-      expect(round.reload.live_results.sole.registration_id).to eq(registration.id)
-      exported = competition.reload.to_wcif(authorized: true, version: "2.2")
-      expect(exported["events"].sole["rounds"].sole["results"]).to eq([result])
+      expect(competition.reload.event_ids).to include("fto")
     end
+
+    shared_examples "FTO WCIF result synchronization" do |scoretaking_software|
+      it "imports and exports FTO results through WCIF with #{scoretaking_software} scoretaking" do
+        competition = create(:competition, starts: Competition::FTO_INTRODUCTION_DATE, event_ids: %w[fto], scoretaking_software: scoretaking_software)
+        round = create(:round, competition: competition, event_id: "fto")
+        registration = create(:registration, :accepted, competition: competition, event_ids: %w[fto])
+        admin = create(:admin)
+
+        result = {
+          "personId" => registration.registrant_id,
+          "ranking" => 1,
+          "attempts" => [3000, 3100, 3200, 3300, -1].map { { "value" => it, "reconstruction" => nil } },
+          "best" => 3000,
+          "average" => 3200,
+        }
+        wcif = competition.reload.to_wcif(authorized: true, version: "2.2")
+        updated_wcif = wcif.merge(
+          "events" => [{ "id" => "fto", "rounds" => [round.to_wcif(version: "2.2").merge("results" => [result])] }],
+        )
+
+        competition.set_wcif!(updated_wcif, admin)
+
+        expect(round.reload.live_results.sole.registration_id).to eq(registration.id)
+        exported = competition.reload.to_wcif(authorized: true, version: "2.2")
+        expect(exported["events"].sole["rounds"].sole["results"]).to eq([result])
+      end
+    end
+
+    it_behaves_like "FTO WCIF result synchronization", :wca_live
+    it_behaves_like "FTO WCIF result synchronization", :external
 
     it "accepts a competition starting before the introduction date without the event" do
       competition = build(:competition, starts: Date.new(2027, 1, 1), event_ids: %w[333])

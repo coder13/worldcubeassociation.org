@@ -2244,7 +2244,6 @@ en:
       cannot_delete_confirmed: "Cannot delete a confirmed competition."
       must_contain_event: "must contain at least one event for this competition"
       fto_not_yet_allowed: "Face Turning Octahedron cannot be held at competitions starting before %{date}."
-      fto_requires_live_scoretaking: "must be set to Integrated Live Results or WCA Live when holding Face Turning Octahedron."
       schedule_must_match_rounds: "must have at least one round, and all rounds must be included in the schedule."
       must_contain_delegate: "must contain at least one WCA Delegate"
       must_contain_organizer: "must contain at least one organizer"
@@ -2333,7 +2332,6 @@ en:
       no_schedule: "This competition has no schedule, the pdf can't be generated."
     #context: on the events page
     events:
-      fto_requires_live_scoretaking: "Face Turning Octahedron requires Integrated Live Results or WCA Live for scoretaking."
       #context: explanation of what time limit, cutoff, and format are
       time_limit_information:
         time_limit_html: "If you reach the time limit during your solve, the judge will stop you and your result will be DNF (see %{regulation_link})."

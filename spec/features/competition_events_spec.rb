@@ -33,10 +33,14 @@ RSpec.feature "Competition events management" do
     context "with external scoretaking" do
       let(:scoretaking_software) { :external }
 
-      scenario "disables adding FTO", :js do
+      scenario "adds FTO", :js do
         within_event_panel("fto") do
-          expect(page).to have_button("Add event", disabled: true)
+          click_button "Add event"
         end
+        select_from_ui(find_event_panel("fto"), "selectRoundCount", "1 round")
+        save_events_react
+
+        expect(competition.reload.event_ids).to eq(%w[fto])
       end
     end
   end
