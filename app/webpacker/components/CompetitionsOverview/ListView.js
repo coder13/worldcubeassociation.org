@@ -70,7 +70,9 @@ function ListView({
           )}
           <ListViewSection
             competitions={upcomingComps}
-            title={I18n.t('competitions.index.titles.upcoming')}
+            title={I18n.t('competitions.index.titles.upcoming', {
+              count: upcomingComps?.length ?? 0,
+            })}
             shouldShowRegStatus={shouldShowRegStatus}
             selectedDelegate={filterState.delegate}
             regStatusLoading={regStatusLoading}
@@ -112,7 +114,16 @@ function ListView({
         <div id="competitions-list">
           <ListViewSection
             competitions={competitions}
-            title={filterState.selectedYear === 'all_years' ? I18n.t('competitions.index.titles.past_all') : I18n.t('competitions.index.titles.past', { year: filterState.selectedYear })}
+            title={
+              filterState.selectedYear === 'all_years'
+                ? I18n.t('competitions.index.titles.past_all', {
+                  count: competitions?.length ?? 0,
+                })
+                : I18n.t('competitions.index.titles.past', {
+                  year: filterState.selectedYear,
+                  count: competitions?.length ?? 0,
+                })
+            }
             shouldShowRegStatus={shouldShowRegStatus}
             shouldShowAdminDetails={shouldShowAdminDetails}
             selectedDelegate={filterState.delegate}
