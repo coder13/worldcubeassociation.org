@@ -538,23 +538,18 @@ export default function CompetitionsPage() {
                             isRepeatedDate={!firstCompetitionIds.has(comp.id)}
                           />
                         ))}
-                        <TableHeaderRow>
-                          {t("competitions.index.titles.upcoming", {
-                            count: upcomingComps.length,
-                          })}
+                        <TableHeaderRow count={upcomingComps.length}>
+                          {t("competitions.index.titles.upcoming")}
                         </TableHeaderRow>
                       </>
                     )}
                     {filterState.timeOrder === "past" && (
-                      <TableHeaderRow>
+                      <TableHeaderRow count={upcomingComps.length}>
                         {filterState.selectedYear !== "all_years"
                           ? t("competitions.index.titles.past", {
                               year: filterState.selectedYear,
-                              count: upcomingComps.length,
                             })
-                          : t("competitions.index.titles.past_all", {
-                              count: upcomingComps.length,
-                            })}
+                          : t("competitions.index.titles.past_all")}
                       </TableHeaderRow>
                     )}
                     {upcomingComps.map((comp) => (
@@ -962,11 +957,15 @@ function AdvancedFilters({
 
 function TableHeaderRow({
   children,
+  count,
   colSpan = 7,
 }: {
-  children: ReactNode;
+  children: string;
+  count?: number;
   colSpan?: number;
 }) {
+  const { t } = useT();
+
   return (
     <Table.Row cursor="default">
       <Table.Cell
@@ -975,7 +974,12 @@ function TableHeaderRow({
         _hover={{ bg: "bg", _odd: { bg: "bg.subtle" } }}
       >
         <Heading textStyle="tableSection" textAlign="center">
-          {children}
+          {count === undefined
+            ? children
+            : t("competitions.index.titles.with_count", {
+                title: children,
+                count,
+              })}
         </Heading>
       </Table.Cell>
     </Table.Row>

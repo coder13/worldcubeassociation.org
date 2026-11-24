@@ -3,6 +3,32 @@
 require "rails_helper"
 
 RSpec.feature "Competitions list", :js do
+  it "shows the upcoming competition count once" do
+    create(:competition, :visible, :future)
+
+    visit "/competitions"
+
+    expect(page).to have_css(".ui.header", text: /\AUpcoming competitions\s*1\z/)
+  end
+
+  context "past competitions" do
+    let!(:competition) { create(:competition, :visible, starts: 1.year.ago) }
+
+    it "shows the all-years competition count once" do
+      visit "/competitions?state=past"
+
+      expect(page).to have_css(".ui.header", text: /\APast competitions from all years\s*1\z/)
+    end
+
+    it "shows the selected year and its competition count once" do
+      year = competition.start_date.year
+
+      visit "/competitions?state=past&year=#{year}"
+
+      expect(page).to have_css(".ui.header", text: /\APast competitions from #{year}\s*1\z/)
+    end
+  end
+
   context "admin view" do
     before :each do
       sign_in create(:admin)
